@@ -161,6 +161,7 @@
     <div class="memo-wrap"><button id="memo-toggle" class="memo-btn">📋 할일</button>
       <div id="memo-panel" class="hidden"><div class="memo-resize" id="memo-resize"></div><div class="memo-head"><span>할일</span><button class="memo-close" id="memo-close">✕</button></div><div class="memo-bar"><span class="memo-tools"><button class="memo-fmt" data-cmd="bold" title="굵게"><b>B</b></button><button class="memo-fmt" data-cmd="italic" title="기울임"><i>I</i></button><button class="memo-fmt" data-cmd="strikeThrough" title="취소선"><s>S</s></button></span><span class="memo-seg"><span class="memo-lab">글자</span><span class="memo-colors" id="memo-fg"></span></span><span class="memo-seg"><span class="memo-lab">배경</span><span class="memo-colors" id="memo-colors"></span></span></div><div id="memo-text" contenteditable="true" data-ph="여기에 자유롭게 메모하세요..."></div><div class="memo-rv" id="memo-rv" title="아래로 끌어 세로 크기 조절">⋯⋯⋯</div></div>
     </div>
+    <button id="logout-btn" class="memo-btn" style="margin-left:8px">로그아웃</button>
   </header>
   <div class="tabs">
     <button class="tab on" data-tab="pw">🔒 비밀번호</button>
@@ -240,6 +241,7 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const FB={apiKey:"AIzaSyD_peSnx8w0OB9IxyhldKEX8XM7r2NkBkY",authDomain:"ljhdashboard.firebaseapp.com",databaseURL:"https://ljhdashboard-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"ljhdashboard",storageBucket:"ljhdashboard.firebasestorage.app",messagingSenderId:"773364283876",appId:"1:773364283876:web:cd10f39944ba6209e1eff1"};
 firebase.initializeApp(FB);
 const _auth=firebase.auth(),_db=firebase.database();
+try{_auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);}catch(e){}
 let dbReady=false,_timers={};
 const SEED_VER="2026-09-28-1";
 function dbSet(path,val){if(!dbReady)return;clearTimeout(_timers[path]);_timers[path]=setTimeout(()=>{_db.ref(path).set(val).catch(()=>{});},400);}
@@ -495,6 +497,7 @@ function showGate(msg){const g=$('#login-gate');if(g)g.style.display='flex';cons
 function hideGate(){const g=$('#login-gate');if(g)g.style.display='none';}
 async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
 if($('#login-btn'))$('#login-btn').onclick=()=>{showGate('로그인 창을 확인하세요…');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{showGate('로그인 실패: '+((e&&e.message)||'')+' — 다시 시도해 주세요.');});};
+if($('#logout-btn'))$('#logout-btn').onclick=()=>{pwPin=null;pwBlob=null;dbReady=false;try{_auth.signOut();}catch(e){}showGate('로그아웃되었습니다. 다시 로그인하세요.');};
 _auth.onAuthStateChanged(async user=>{
   if(!user){dbReady=false;showGate('구글 계정으로 로그인하세요.');return;}
   showGate('불러오는 중…');
