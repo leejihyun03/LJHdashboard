@@ -67,11 +67,11 @@
   .btn.add{background:var(--accent);color:#fff;border:1px solid var(--accent)}
   .btn.ghost{background:#fff;color:var(--muted);border:1px solid var(--line)}
   .count{font-size:12.5px;color:var(--muted);margin-left:auto}
-  .tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+  .tbl-scroll{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:calc(100vh - 235px)}
   table{border-collapse:collapse;width:100%;font-size:12.5px}
   table.fixed{table-layout:fixed}
   th,td{padding:4px 9px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle;height:30px}
-  th{background:#f4f3ef;color:#6b6b63;font-weight:600;white-space:nowrap;font-size:12px;position:relative}
+  th{background:#f4f3ef;color:#6b6b63;font-weight:600;white-space:nowrap;font-size:12px;position:sticky;top:0;z-index:3;box-shadow:inset 0 -1px 0 var(--line)}
   .totop{text-align:center;margin-top:18px}
   tr:last-child td{border-bottom:none}
   td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -132,9 +132,10 @@
 
   /* 제작현황 2단 + 프로젝트 보드 */
   .prod-layout{display:flex;gap:14px;align-items:flex-start}
-  .prod-main{flex:1 1 0;min-width:0;max-width:560px}
-  .proj-pane{flex:2 1 380px;max-width:none}
-  @media(max-width:900px){.prod-layout{flex-direction:column}.prod-main{max-width:none}.proj-pane{width:100%}}
+  .prod-main{flex:1 1 0;min-width:0}
+  .proj-pane{flex:1 1 0;min-width:0}
+  #proj-list{max-height:calc(100vh - 235px);overflow:auto;padding-right:4px}
+  @media(max-width:900px){.prod-layout{flex-direction:column}.prod-main{max-width:none}.proj-pane{width:100%}.tbl-scroll{max-height:none}#proj-list{max-height:none}}
   .colren{cursor:pointer;color:#b7bcc4;opacity:0;margin-left:5px;font-size:11px}
   th:hover .colren{opacity:.8}
   .colren:hover{color:var(--accent)}
@@ -176,6 +177,11 @@
   .pj-memo:focus{outline:1px solid var(--accent)}
   .pj-memo:empty:before{content:attr(data-ph);color:var(--muted)}
   .proj-empty{color:var(--muted);font-size:12.5px;text-align:center;padding:16px 8px;border:1px dashed var(--line);border-radius:10px}
+  #proj-list.cols2{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+  #proj-list.cols2 .pj{margin-bottom:0}
+  @media(max-width:1100px){#proj-list.cols2{grid-template-columns:1fr}}
+  .pj-bgs{display:inline-flex;gap:3px;flex:0 0 auto;align-items:center}
+  .pj-bgs .pj-sw{width:13px;height:13px}
   .hidden{display:none}
   #login-gate{position:fixed;inset:0;background:#20242e;display:flex;align-items:center;justify-content:center;z-index:9999}
   .login-box{background:#fbfbf9;border-radius:16px;padding:34px 30px;text-align:center;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -255,7 +261,7 @@
         <div class="totop"><button class="btn ghost totop-btn">↑ 맨 위로</button></div>
       </div>
       <aside class="proj-pane">
-        <div class="proj-head"><span>프로젝트 보드</span><button class="btn add" id="proj-add" style="padding:5px 11px">+ 추가</button></div>
+        <div class="proj-head"><span>프로젝트 보드</span><button class="btn ghost" id="proj-cols" style="padding:5px 10px">2단 보기</button><button class="btn add" id="proj-add" style="padding:5px 11px">+ 추가</button></div>
         <div id="proj-list"></div>
       </aside>
     </div>
@@ -309,7 +315,7 @@ function hl(text,q){const t=(text==null?'':''+text);if(!q)return esc(t);const i=
 const KEY='consabu_store_v2';
 const BASE_CATS=['갑우','매입처','산기협'];
 let store=load(); let editing=null; let activeEditor=null;
-function load(){let s;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}if(!s)s=clone(SEED);if(!s.contactOrder){const ks=Object.keys(s.contacts||{});s.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(s.prod&&s.prod.length&&!('견적일' in s.prod[0])){s.prod=clone(SEED.prod);try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}['prod','out'].forEach(t=>{if(Array.isArray(s[t]))s[t].forEach(r=>{delete r._new;});});if(!s.cols)s.cols={prod:[],out:[]};if(!Array.isArray(s.projects))s.projects=[];if(!s.colLabels)s.colLabels={};return s;}
+function load(){let s;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}if(!s)s=clone(SEED);if(!s.contactOrder){const ks=Object.keys(s.contacts||{});s.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(s.prod&&s.prod.length&&!('견적일' in s.prod[0])){s.prod=clone(SEED.prod);try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}['prod','out'].forEach(t=>{if(Array.isArray(s[t]))s[t].forEach(r=>{delete r._new;});});if(!s.cols)s.cols={prod:[],out:[]};if(!Array.isArray(s.projects))s.projects=[];if(!s.colLabels)s.colLabels={};if(s.projCols!==2)s.projCols=1;return s;}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}dbSet('store',store);}
 
 /* 열너비 저장 */
@@ -553,6 +559,7 @@ const PJ_TODO=['#2c2c2c','#d23f3f','#2f7d43','#2563c9','#c9761a','#8a4fbf'];
 const PJ_MFG=['#2c2c2c','#d23f3f','#2f7d43','#2563c9','#c9761a','#8a4fbf'];
 function renderProjects(){
   const box=$('#proj-list');if(!box)return;
+  box.classList.toggle('cols2',store.projCols===2);
   const list=store.projects||[];
   if(!list.length){box.innerHTML='<div class="proj-empty">+ 추가로 프로젝트를 만들어<br>기간·할일·메모를 관리하세요.</div>';return;}
   box.innerHTML=list.map((p,i)=>{
@@ -561,8 +568,7 @@ function renderProjects(){
     const mfg=PJ_MFG.map(c=>'<span class="pj-sw" data-act="pmfg" data-pi="'+i+'" data-c="'+c+'" style="background:'+c+'"></span>').join('');
     return '<div class="pj" data-pi="'+i+'" style="background:'+(p.bg||'#ffffff')+'">'
       +'<div class="pj-top"><span class="pj-dh" draggable="true" title="드래그로 순서 변경">⠿</span>'
-      +'<input class="pj-name" data-pi="'+i+'" data-act="pname" value="'+esc(p.name||'')+'" placeholder="프로젝트명"><button class="pj-x" data-pi="'+i+'" data-act="pdel" title="프로젝트 삭제">✕</button></div>'
-      +'<div class="pj-bg"><span class="pj-lab">배경</span>'+bgsw+'</div>'
+      +'<input class="pj-name" data-pi="'+i+'" data-act="pname" value="'+esc(p.name||'')+'" placeholder="프로젝트명"><span class="pj-bgs">'+bgsw+'</span><button class="pj-x" data-pi="'+i+'" data-act="pdel" title="프로젝트 삭제">✕</button></div>'
       +'<div class="pj-dates"><input type="date" data-pi="'+i+'" data-act="pstart" value="'+esc((p.start||'').slice(0,10))+'"><span>~</span><input type="date" data-pi="'+i+'" data-act="pend" value="'+esc((p.end||'').slice(0,10))+'"></div>'
       +'<ul class="pj-todos">'+todos+'</ul>'
       +'<div class="pj-addtodo"><input data-pi="'+i+'" data-act="paddtodo" placeholder="할 일 추가 후 Enter"><button data-pi="'+i+'" data-act="paddtodo-btn">+</button></div>'
@@ -573,6 +579,9 @@ function renderProjects(){
 }
 function initProjects(){
   const box=$('#proj-list');if(!box)return;
+  function updateColsBtn(){const b=$('#proj-cols');if(b)b.textContent=(store.projCols===2?'1단 보기':'2단 보기');}
+  updateColsBtn();
+  if($('#proj-cols'))$('#proj-cols').onclick=()=>{store.projCols=(store.projCols===2?1:2);save();updateColsBtn();renderProjects();};
   if($('#proj-add'))$('#proj-add').onclick=()=>{store.projects=store.projects||[];store.projects.unshift({id:puid(),name:'',start:'',end:'',memo:'',bg:'#ffffff',todos:[]});save();renderProjects();const f=box.querySelector('.pj-name');if(f)f.focus();};
   function addTodo(i,txt){txt=(txt||'').trim();if(!txt)return;const p=store.projects[i];if(!p)return;p.todos=p.todos||[];p.todos.push({t:txt,done:false,color:''});save();renderProjects();const inp=box.querySelector('input[data-act="paddtodo"][data-pi="'+i+'"]');if(inp)inp.focus();}
   box.addEventListener('input',e=>{
@@ -612,7 +621,7 @@ function setTopOffset(){const tb=document.querySelector('.topbar');if(tb)documen
 window.addEventListener('resize',setTopOffset);
 function showGate(msg){const g=$('#login-gate');if(g)g.style.display='flex';const m=$('#login-msg');if(m&&msg)m.textContent=msg;}
 function hideGate(){const g=$('#login-gate');if(g)g.style.display='none';}
-async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
+async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
 if($('#login-btn'))$('#login-btn').onclick=()=>{showGate('로그인 창을 확인하세요…');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{showGate('로그인 실패: '+((e&&e.message)||'')+' — 다시 시도해 주세요.');});};
 if($('#logout-btn'))$('#logout-btn').onclick=()=>{pwPin=null;pwBlob=null;dbReady=false;try{_auth.signOut();}catch(e){}showGate('로그아웃되었습니다. 다시 로그인하세요.');};
 _auth.onAuthStateChanged(async user=>{
