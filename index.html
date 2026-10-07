@@ -666,7 +666,7 @@ function fmtEvTime(ev){if(evIsAllDay(ev))return '종일';const s=ev.start.dateTi
 async function loadCalEvents(){if(!gcalReady())return;calLoading=true;renderCal();const now=new Date();const tMin=now.toISOString();const tMax=new Date(now.getTime()+gcalRange*86400000).toISOString();try{const data=await gcal('GET','/calendars/primary/events?timeMin='+encodeURIComponent(tMin)+'&timeMax='+encodeURIComponent(tMax)+'&singleEvents=true&orderBy=startTime&maxResults=100');gcalEvents=(data&&data.items)||[];}catch(e){gcalEvents=[];if(e&&e.code===401){/* 토큰만료 */}else if(e&&e.code===403){toast('캘린더 API가 아직 켜지지 않았어요');}}calLoading=false;renderCal();}
 function renderCal(){
   const box=$('#cal-body'),st=$('#cal-status');if(!box)return;
-  if(!gcalReady()){if(st)st.textContent='미연결';box.innerHTML='<div class="proj-empty" style="max-width:420px;margin:30px auto">대시보드에서 일정을 보고 추가·삭제하려면<br>구글 캘린더를 연결하세요.<br><br><button class="btn add" id="cal-connect">📅 캘린더 연결하기</button><div class="note" style="margin-top:10px">연결은 이 브라우저 세션 동안 유지됩니다. 처음엔 캘린더 접근 권한에 동의해 주세요.</div></div>';const cb=$('#cal-connect');if(cb)cb.onclick=()=>{cb.textContent='연결 중…';connectCal().then(()=>loadCalEvents()).catch(e=>{renderCal();toast('연결 실패: 다시 시도해 주세요');});};return;}
+  if(!gcalReady()){if(st)st.textContent='미연결';box.innerHTML='<div class="proj-empty" style="max-width:420px;margin:30px auto">대시보드에서 일정을 보고 추가·삭제하려면<br>구글 캘린더를 연결하세요.<br><br><button class="btn add" id="cal-connect">📅 캘린더 연결하기</button><div class="note" style="margin-top:10px">연결은 이 브라우저 세션 동안 유지됩니다. 처음엔 캘린더 접근 권한에 동의해 주세요.</div></div>';const cb=$('#cal-connect');if(cb)cb.onclick=()=>{cb.textContent='이동 중…';try{sessionStorage.setItem('gcalConnect','1');}catch(e){}_auth.signInWithRedirect(gcalProvider()).catch(e=>{try{sessionStorage.removeItem('gcalConnect');}catch(_){}renderCal();toast('연결 실패: 다시 시도해 주세요');});};return;}
   if(st)st.textContent=calLoading?'불러오는 중…':(gcalEvents.length+'건');
   if(calLoading){box.innerHTML='<p class="empty">불러오는 중…</p>';return;}
   if(!gcalEvents.length){box.innerHTML='<div class="proj-empty" style="margin-top:20px">다가오는 일정이 없어요. ‘➕ 일정 추가’로 만들어 보세요.</div>';return;}
@@ -718,9 +718,12 @@ if($('#login-btn'))$('#login-btn').onclick=()=>{showGate('로그인 창을 확�
 if($('#logout-btn'))$('#logout-btn').onclick=()=>{pwPin=null;pwBlob=null;dbReady=false;try{_auth.signOut();}catch(e){}showGate('로그아웃되었습니다. 다시 로그인하세요.');};
 _auth.onAuthStateChanged(async user=>{
   if(!user){dbReady=false;showGate('구글 계정으로 로그인하세요.');return;}
+  try{const rr=await _auth.getRedirectResult();if(rr&&rr.user)gcalCapture(rr);}catch(e){}
   showGate('불러오는 중…');
   try{await dbLoadAll();}catch(e){showGate('이 계정('+((user&&user.email)||'')+')은 접근 권한이 없습니다. 등록된 계정으로 다시 로그인해 주세요.');try{await _auth.signOut();}catch(_){}return;}
   hideGate();renderAll();setTopOffset();
+  let wantCal=false;try{wantCal=sessionStorage.getItem('gcalConnect')==='1';}catch(e){}
+  if(wantCal){try{sessionStorage.removeItem('gcalConnect');}catch(e){}const tb=document.querySelector('.tab[data-tab="cal"]');if(tb)tb.click();if(gcalToken)loadCalEvents();}
 });
 </script>
 </body>
