@@ -183,6 +183,10 @@
   .pj-bgs{display:inline-flex;gap:3px;flex:0 0 auto;align-items:center}
   .pj-bgs .pj-sw{width:13px;height:13px}
   .cal-frame{width:100%;height:calc(100vh - 185px);min-height:420px;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .cal-bgs{display:inline-flex;align-items:center;gap:4px;margin-left:4px}
+  .cal-sw{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.2);cursor:pointer;display:inline-block}
+  .cal-sw:hover{transform:scale(1.15)}
+  .cal-sw.on{box-shadow:0 0 0 2px var(--accent)}
   .cal-list{max-width:620px}
   .cal-dhead{font-size:12px;font-weight:700;color:var(--muted);margin:12px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--line)}
   .cal-ev{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px}
@@ -310,6 +314,7 @@
       <button class="chip cal-mode" data-cm="AGENDA">일정</button>
       <button class="btn add" id="cal-new">➕ 일정 추가</button>
       <button class="btn ghost" id="cal-open">↗ 새 탭에서 열기</button>
+      <span class="cal-bgs" id="cal-bgs"><span class="pj-lab">배경</span></span>
     </div>
     <iframe id="cal-frame" class="cal-frame" src="about:blank" style="border:0" loading="lazy"></iframe>
     <p class="note">내 구글 계정으로 로그인된 브라우저에서 내 일정이 그대로 보여요(보기 전용). 추가는 '➕ 일정 추가', 수정·삭제는 캘린더에서 하면 됩니다. '권한 필요'가 뜨면 '새 탭에서 열기'를 이용하세요.</p>
@@ -654,12 +659,14 @@ initProjects();
 
 
 /* ===== 구글 캘린더 (보기 + 빠른 추가) ===== */
-function calUrl(){const src=store.calSrc||'leejihyun3000@gmail.com';const mode=store.calMode||'WEEK';return 'https://calendar.google.com/calendar/embed?src='+encodeURIComponent(src)+'&ctz=Asia%2FSeoul&mode='+mode+'&wkst=1&showTitle=0&showPrint=0&showTz=0';}
-function renderCal(){const f=$('#cal-frame');if(!f)return;const u=calUrl();if(f.getAttribute('data-u')!==u){f.src=u;f.setAttribute('data-u',u);}$$('.cal-mode').forEach(b=>b.classList.toggle('on',b.dataset.cm===(store.calMode||'WEEK')));}
+function calUrl(){const src=store.calSrc||'leejihyun3000@gmail.com';const mode=store.calMode||'WEEK';return 'https://calendar.google.com/calendar/embed?src='+encodeURIComponent(src)+'&ctz=Asia%2FSeoul&mode='+mode+'&wkst=1&showTitle=0&showPrint=0&showTz=0&bgcolor='+encodeURIComponent(store.calBg||'#ffffff');}
+function renderCal(){const f=$('#cal-frame');if(!f)return;const u=calUrl();if(f.getAttribute('data-u')!==u){f.src=u;f.setAttribute('data-u',u);}$$('.cal-mode').forEach(b=>b.classList.toggle('on',b.dataset.cm===(store.calMode||'WEEK')));$$('.cal-sw').forEach(x=>x.classList.toggle('on',x.dataset.calbg===(store.calBg||'#ffffff')));}
 (function initCal(){
   $$('.cal-mode').forEach(b=>b.onclick=()=>{store.calMode=b.dataset.cm;save();renderCal();});
   if($('#cal-new'))$('#cal-new').onclick=()=>window.open('https://calendar.google.com/calendar/u/0/r/eventedit','_blank','noopener');
   if($('#cal-open'))$('#cal-open').onclick=()=>window.open(calUrl(),'_blank','noopener');
+  const CALBG=['#ffffff','#f4f3ef','#fff7d6','#e6f5ea','#e6eefb','#fdeaf3','#eee9f6'];
+  const bgs=$('#cal-bgs');if(bgs){bgs.insertAdjacentHTML('beforeend',CALBG.map(c=>'<span class="cal-sw" data-calbg="'+c+'" style="background:'+c+'"></span>').join(''));bgs.addEventListener('click',e=>{const sw=e.target.closest('[data-calbg]');if(!sw)return;store.calBg=sw.dataset.calbg;save();renderCal();$$('.cal-sw',bgs).forEach(x=>x.classList.toggle('on',x.dataset.calbg===store.calBg));});}
 })();
 
 function renderAll(){renderTable('prod');renderTable('out');renderContacts();renderPw();renderProjects();renderCal();}
