@@ -182,6 +182,7 @@
   @media(max-width:1100px){#proj-list.cols2{grid-template-columns:1fr}}
   .pj-bgs{display:inline-flex;gap:3px;flex:0 0 auto;align-items:center}
   .pj-bgs .pj-sw{width:13px;height:13px}
+  .cal-frame{width:100%;height:calc(100vh - 185px);min-height:420px;border:1px solid var(--line);border-radius:10px;background:#fff}
   .hidden{display:none}
   #login-gate{position:fixed;inset:0;background:#20242e;display:flex;align-items:center;justify-content:center;z-index:9999}
   .login-box{background:#fbfbf9;border-radius:16px;padding:34px 30px;text-align:center;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
@@ -221,6 +222,7 @@
     <button class="tab" data-tab="contacts">연락처</button>
     <button class="tab" data-tab="prod">제작현황</button>
     <button class="tab" data-tab="out">외주지급</button>
+    <button class="tab" data-tab="cal">📅 캘린더</button>
   </div>
   </div>
 
@@ -285,6 +287,19 @@
     <p class="note">지결 날짜를 넣으면 초록(완료), 비우면 분홍(미제출). 열 경계선 드래그로 너비 조절.</p>
     <div class="totop"><button class="btn ghost totop-btn">↑ 맨 위로</button></div>
   </section>
+
+  <section class="panel hidden" id="tab-cal">
+    <div class="toolbar">
+      <button class="chip cal-mode on" data-cm="WEEK">주</button>
+      <button class="chip cal-mode" data-cm="MONTH">월</button>
+      <button class="chip cal-mode" data-cm="DAY">일</button>
+      <button class="chip cal-mode" data-cm="AGENDA">일정</button>
+      <button class="btn ghost" id="cal-src">캘린더 주소 설정</button>
+      <button class="btn ghost" id="cal-open">↗ 새 탭에서 열기</button>
+    </div>
+    <iframe id="cal-frame" class="cal-frame" src="about:blank" style="border:0" loading="lazy"></iframe>
+    <p class="note">내 구글 계정으로 로그인된 브라우저에서 내 일정이 보여요. '권한 필요/로그인' 화면이 뜨면, 브라우저에서 google.com 쿠키(제3자 쿠키)를 허용하거나 '새 탭에서 열기'를 이용하세요.</p>
+  </section>
 </div>
 <div id="toast"></div>
 <input type="file" id="pw-file" accept=".xlsx" class="hidden">
@@ -315,7 +330,7 @@ function hl(text,q){const t=(text==null?'':''+text);if(!q)return esc(t);const i=
 const KEY='consabu_store_v2';
 const BASE_CATS=['갑우','매입처','산기협'];
 let store=load(); let editing=null; let activeEditor=null;
-function load(){let s;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}if(!s)s=clone(SEED);if(!s.contactOrder){const ks=Object.keys(s.contacts||{});s.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(s.prod&&s.prod.length&&!('견적일' in s.prod[0])){s.prod=clone(SEED.prod);try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}['prod','out'].forEach(t=>{if(Array.isArray(s[t]))s[t].forEach(r=>{delete r._new;});});if(!s.cols)s.cols={prod:[],out:[]};if(!Array.isArray(s.projects))s.projects=[];if(!s.colLabels)s.colLabels={};if(s.projCols!==2)s.projCols=1;return s;}
+function load(){let s;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}if(!s)s=clone(SEED);if(!s.contactOrder){const ks=Object.keys(s.contacts||{});s.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(s.prod&&s.prod.length&&!('견적일' in s.prod[0])){s.prod=clone(SEED.prod);try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}['prod','out'].forEach(t=>{if(Array.isArray(s[t]))s[t].forEach(r=>{delete r._new;});});if(!s.cols)s.cols={prod:[],out:[]};if(!Array.isArray(s.projects))s.projects=[];if(!s.colLabels)s.colLabels={};if(s.projCols!==2)s.projCols=1;if(!s.calMode)s.calMode='WEEK';return s;}
 const UNDO_SECTIONS={contacts:['contacts','contactOrder'],prod:['prod'],out:['out'],projects:['projects']};
 let undoStacks={contacts:[],prod:[],out:[],projects:[]},prevSnaps={};
 function secSnap(sec){const o={};UNDO_SECTIONS[sec].forEach(k=>o[k]=clone(store[k]));return o;}
@@ -623,12 +638,22 @@ function initProjects(){
 }
 initProjects();
 
-function renderAll(){renderTable('prod');renderTable('out');renderContacts();renderPw();renderProjects();}
+
+/* ===== 구글 캘린더 ===== */
+function calUrl(){const src=store.calSrc||'leejihyun3000@gmail.com';const mode=store.calMode||'WEEK';return 'https://calendar.google.com/calendar/embed?src='+encodeURIComponent(src)+'&ctz=Asia%2FSeoul&mode='+mode+'&wkst=1&showTitle=0&showPrint=0&showTz=0';}
+function renderCal(){const f=$('#cal-frame');if(!f)return;const u=calUrl();if(f.getAttribute('data-u')!==u){f.src=u;f.setAttribute('data-u',u);}$$('.cal-mode').forEach(b=>b.classList.toggle('on',b.dataset.cm===(store.calMode||'WEEK')));}
+(function initCal(){
+  $$('.cal-mode').forEach(b=>b.onclick=()=>{store.calMode=b.dataset.cm;save();renderCal();});
+  if($('#cal-open'))$('#cal-open').onclick=()=>window.open(calUrl(),'_blank','noopener');
+  if($('#cal-src'))$('#cal-src').onclick=()=>{const cur=store.calSrc||'leejihyun3000@gmail.com';const nn=(prompt('표시할 구글 캘린더 주소(이메일 형식)를 입력하세요.\n예: 본인 Gmail, 또는 공유받은 캘린더 ID',cur)||'').trim();if(nn){store.calSrc=nn;save();renderCal();toast('캘린더 주소 변경됨');}};
+})();
+
+function renderAll(){renderTable('prod');renderTable('out');renderContacts();renderPw();renderProjects();renderCal();}
 function setTopOffset(){const tb=document.querySelector('.topbar');if(tb)document.documentElement.style.setProperty('--topbarH',tb.offsetHeight+'px');}
 window.addEventListener('resize',setTopOffset);
 function showGate(msg){const g=$('#login-gate');if(g)g.style.display='flex';const m=$('#login-msg');if(m&&msg)m.textContent=msg;}
 function hideGate(){const g=$('#login-gate');if(g)g.style.display='none';}
-async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;initUndo();if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
+async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;if(!store.calMode)store.calMode='WEEK';['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;initUndo();if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
 if($('#login-btn'))$('#login-btn').onclick=()=>{showGate('로그인 창을 확인하세요…');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{showGate('로그인 실패: '+((e&&e.message)||'')+' — 다시 시도해 주세요.');});};
 if($('#logout-btn'))$('#logout-btn').onclick=()=>{pwPin=null;pwBlob=null;dbReady=false;try{_auth.signOut();}catch(e){}showGate('로그아웃되었습니다. 다시 로그인하세요.');};
 _auth.onAuthStateChanged(async user=>{
