@@ -316,9 +316,14 @@ const KEY='consabu_store_v2';
 const BASE_CATS=['갑우','매입처','산기협'];
 let store=load(); let editing=null; let activeEditor=null;
 function load(){let s;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}if(!s)s=clone(SEED);if(!s.contactOrder){const ks=Object.keys(s.contacts||{});s.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(s.prod&&s.prod.length&&!('견적일' in s.prod[0])){s.prod=clone(SEED.prod);try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}['prod','out'].forEach(t=>{if(Array.isArray(s[t]))s[t].forEach(r=>{delete r._new;});});if(!s.cols)s.cols={prod:[],out:[]};if(!Array.isArray(s.projects))s.projects=[];if(!s.colLabels)s.colLabels={};if(s.projCols!==2)s.projCols=1;return s;}
-let undoStack=[],prevSnap=null;
-function save(){if(prevSnap===null){prevSnap=clone(store);}else{undoStack.push(prevSnap);if(undoStack.length>60)undoStack.shift();prevSnap=clone(store);}try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}dbSet('store',store);}
-function doUndo(){if(!undoStack.length){toast('되돌릴 작업이 없어요');return;}commitActive();const snap=undoStack.pop();store=snap;prevSnap=clone(store);editing=null;activeEditor=null;try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}dbSet('store',store);renderAll();toast('직전 작업을 취소했어요');}
+const UNDO_SECTIONS={contacts:['contacts','contactOrder'],prod:['prod'],out:['out'],projects:['projects']};
+let undoStacks={contacts:[],prod:[],out:[],projects:[]},prevSnaps={};
+function secSnap(sec){const o={};UNDO_SECTIONS[sec].forEach(k=>o[k]=clone(store[k]));return o;}
+function initUndo(){prevSnaps={};Object.keys(UNDO_SECTIONS).forEach(sec=>prevSnaps[sec]=secSnap(sec));undoStacks={contacts:[],prod:[],out:[],projects:[]};}
+function persistStore(){try{localStorage.setItem(KEY,JSON.stringify(store));}catch(e){}dbSet('store',store);}
+function recordUndo(){Object.keys(UNDO_SECTIONS).forEach(sec=>{const cur=secSnap(sec);if(prevSnaps[sec]===undefined){prevSnaps[sec]=cur;return;}if(JSON.stringify(cur)!==JSON.stringify(prevSnaps[sec])){undoStacks[sec].push(prevSnaps[sec]);if(undoStacks[sec].length>60)undoStacks[sec].shift();prevSnaps[sec]=cur;}});}
+function save(){recordUndo();persistStore();}
+function doUndo(sec){const st=undoStacks[sec];if(!st||!st.length){toast('되돌릴 작업이 없어요');return;}commitActive();const snap=st.pop();UNDO_SECTIONS[sec].forEach(k=>{store[k]=snap[k];});prevSnaps[sec]=secSnap(sec);editing=null;activeEditor=null;persistStore();renderAll();toast('직전 작업을 취소했어요');}
 
 /* 열너비 저장 */
 const COLW='consabu_colw';
@@ -381,7 +386,7 @@ function nextCell(tab,i,k,dir){const cols=effCols(tab),pos=cols.findIndex(c=>c.k
 ['거래처','작가'].forEach(k=>{const el=document.querySelector('#tab-out [data-fk="'+k+'"]');if(el)el.onchange=()=>{commitActive();CFG.out.sel[k]=el.value;renderTable('out');};});
 $$('[data-add]').forEach(b=>b.onclick=()=>{const tab=b.dataset.add;commitActive();CFG[tab].filter='all';CFG[tab].q='';if(CFG[tab].sel){for(const k in CFG[tab].sel)CFG[tab].sel[k]='';}$('#'+tab+'-q').value='';$$('#tab-'+tab+' .chip').forEach(x=>x.classList.toggle('on',x.dataset.f==='all'));const _nr=CFG[tab].blank();_nr._new=Date.now();store[tab].unshift(_nr);save();renderTable(tab);openCell(tab,0,CFG[tab].firstEdit);});
 $$('[data-addcol]').forEach(b=>b.onclick=()=>{const tab=b.dataset.addcol;commitActive();const n=(prompt('추가할 열 이름을 입력하세요')||'').trim();if(!n)return;if(effCols(tab).map(c=>c.k).includes(n)){toast('이미 있는 열 이름이에요');return;}store.cols[tab]=store.cols[tab]||[];store.cols[tab].push({k:n,label:n,w:120});save();renderTable(tab);toast('열 추가됨');});
-$$('[data-reset]').forEach(b=>b.onclick=()=>doUndo());
+$$('[data-reset]').forEach(b=>b.onclick=()=>doUndo(b.dataset.reset));
 $$('[data-print]').forEach(b=>b.onclick=()=>{commitActive();window.print();});
 $$('[data-xls]').forEach(b=>b.onclick=()=>exportXls(b.dataset.xls));
 
@@ -623,7 +628,7 @@ function setTopOffset(){const tb=document.querySelector('.topbar');if(tb)documen
 window.addEventListener('resize',setTopOffset);
 function showGate(msg){const g=$('#login-gate');if(g)g.style.display='flex';const m=$('#login-msg');if(m&&msg)m.textContent=msg;}
 function hideGate(){const g=$('#login-gate');if(g)g.style.display='none';}
-async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;prevSnap=clone(store);undoStack=[];if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
+async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;initUndo();if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
 if($('#login-btn'))$('#login-btn').onclick=()=>{showGate('로그인 창을 확인하세요…');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{showGate('로그인 실패: '+((e&&e.message)||'')+' — 다시 시도해 주세요.');});};
 if($('#logout-btn'))$('#logout-btn').onclick=()=>{pwPin=null;pwBlob=null;dbReady=false;try{_auth.signOut();}catch(e){}showGate('로그아웃되었습니다. 다시 로그인하세요.');};
 _auth.onAuthStateChanged(async user=>{
