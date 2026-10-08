@@ -115,6 +115,8 @@
   .fsel{padding:7px 10px;border:1px solid var(--line);border-radius:9px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);max-width:170px}
   .cgroup h2 .badge{font-size:11.5px;color:#fff;background:var(--accent);border-radius:20px;padding:1px 9px;font-weight:600}
   .cgroup h2 .xcat{margin-left:6px;color:#c98;cursor:pointer;font-size:13px;border:none;background:none}
+  .cgroup h2 .ccol{border:none;background:none;cursor:pointer;color:var(--muted);font-size:12px;padding:0 2px}
+  .cgroup h2 .ccol:hover{color:var(--accent)}
   .empty{color:var(--muted);font-size:13px;padding:14px;text-align:center}
   .note{font-size:12px;color:var(--muted);margin-top:8px}
   .lockbox{max-width:340px;margin:7vh auto;text-align:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:30px 26px}
@@ -345,7 +347,7 @@ function hl(text,q){const t=(text==null?'':''+text);if(!q)return esc(t);const i=
 const KEY='consabu_store_v2';
 const BASE_CATS=['갑우','매입처','산기협'];
 let store=load(); let editing=null; let activeEditor=null;
-function load(){let s;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}if(!s)s=clone(SEED);if(!s.contactOrder){const ks=Object.keys(s.contacts||{});s.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(s.prod&&s.prod.length&&!('견적일' in s.prod[0])){s.prod=clone(SEED.prod);try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}['prod','out'].forEach(t=>{if(Array.isArray(s[t]))s[t].forEach(r=>{delete r._new;});});if(!s.cols)s.cols={prod:[],out:[]};if(!Array.isArray(s.projects))s.projects=[];if(!s.colLabels)s.colLabels={};if(s.projCols!==2)s.projCols=1;if(!s.calMode)s.calMode='WEEK';return s;}
+function load(){let s;try{s=JSON.parse(localStorage.getItem(KEY));}catch(e){}if(!s)s=clone(SEED);if(!s.contactOrder){const ks=Object.keys(s.contacts||{});s.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(s.prod&&s.prod.length&&!('견적일' in s.prod[0])){s.prod=clone(SEED.prod);try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}['prod','out'].forEach(t=>{if(Array.isArray(s[t]))s[t].forEach(r=>{delete r._new;});});if(!s.cols)s.cols={prod:[],out:[]};if(!Array.isArray(s.projects))s.projects=[];if(!s.colLabels)s.colLabels={};if(s.projCols!==2)s.projCols=1;if(!s.calMode)s.calMode='WEEK';if(!s.contactCollapsed)s.contactCollapsed={};return s;}
 const UNDO_SECTIONS={contacts:['contacts','contactOrder'],prod:['prod'],out:['out'],projects:['projects']};
 let undoStacks={contacts:[],prod:[],out:[],projects:[]},prevSnaps={};
 function secSnap(sec){const o={};UNDO_SECTIONS[sec].forEach(k=>o[k]=clone(store[k]));return o;}
@@ -440,7 +442,7 @@ function contactTable(cat,rowObjs,q){
   }).join('')||`<tr><td colspan="5" class="empty">항목이 없어요.</td></tr>`;
   return `<div class="tbl-scroll"><table><thead><tr><th>이름/업체</th><th>부서</th><th>연락처</th><th>이메일</th><th style="width:104px"></th></tr></thead><tbody>${body}</tbody></table></div>`;
 }
-function chead(cat,count,drag){const del=`<button class="xcat" data-act="cdelcat" data-g="${esc(cat)}" title="카테고리 삭제">✕</button>`;const dh=drag?'<span class="dh" draggable="true" title="드래그로 순서 변경">⠿</span>':'';return `<h2>${dh}${esc(cat)}<span class="badge">${count}</span><button class="btn add" style="padding:5px 11px" data-act="cadd" data-g="${esc(cat)}">+ 추가</button>${del}</h2>`;}
+function chead(cat,count,drag){const del=`<button class="xcat" data-act="cdelcat" data-g="${esc(cat)}" title="카테고리 삭제">✕</button>`;const dh=drag?'<span class="dh" draggable="true" title="드래그로 순서 변경">⠿</span>':'';const col=(store.contactCollapsed&&store.contactCollapsed[cat]);const ar=`<button class="ccol" data-act="ctoggle" data-g="${esc(cat)}" title="접기/펼치기">${col?'▸':'▾'}</button>`;return `<h2>${dh}${ar}${esc(cat)}<span class="badge">${count}</span><button class="btn add" style="padding:5px 11px" data-act="cadd" data-g="${esc(cat)}">+ 추가</button>${del}</h2>`;}
 function sortedRows(cat,q){const list=store.contacts[cat]||[];return list.map((c,i)=>({c,i})).filter(({c})=>!q||(c.이름+c.부서+c.연락처+c.이메일+(c.기타||'')).toLowerCase().includes(q)).sort((a,b)=>(a.c.이름||'').localeCompare(b.c.이름||'','ko'));}
 function renderContacts(){
   const q=$('#c-q').value.trim().toLowerCase();let total=0;
@@ -448,9 +450,9 @@ function renderContacts(){
   let widest=cats[0]||null,mx=-1;cats.forEach(c=>{const n=(store.contacts[c]||[]).length;if(n>mx){mx=n;widest=c;}});
   const others=cats.filter(c=>c!==widest);
   let html='<div class="contact-grid">';
-  others.forEach(cat=>{const rows=sortedRows(cat,q);total+=rows.length;html+=`<div class="cgroup" data-cat="${esc(cat)}" data-drag="1">${chead(cat,(store.contacts[cat]||[]).length,true)}${contactTable(cat,rows,q)}</div>`;});
-  if(widest){const rows=sortedRows(widest,q);total+=rows.length;const mid=Math.ceil(rows.length/2);const L=rows.slice(0,mid),R=rows.slice(mid);
-    html+=`<div class="cgroup span2">${chead(widest,(store.contacts[widest]||[]).length,false)}<div class="subgrid">${contactTable(widest,L,q)}${contactTable(widest,R,q)}</div></div>`;}
+  others.forEach(cat=>{const rows=sortedRows(cat,q);total+=rows.length;const col=store.contactCollapsed&&store.contactCollapsed[cat];html+=`<div class="cgroup" data-cat="${esc(cat)}" data-drag="1">${chead(cat,(store.contacts[cat]||[]).length,true)}${col?'':contactTable(cat,rows,q)}</div>`;});
+  if(widest){const rows=sortedRows(widest,q);total+=rows.length;const mid=Math.ceil(rows.length/2);const L=rows.slice(0,mid),R=rows.slice(mid);const col=store.contactCollapsed&&store.contactCollapsed[widest];
+    html+=`<div class="cgroup span2">${chead(widest,(store.contacts[widest]||[]).length,false)}${col?'':'<div class="subgrid">'+contactTable(widest,L,q)+contactTable(widest,R,q)+'</div>'}</div>`;}
   html+='</div>';
   $('#c-body').innerHTML=html;$('#c-count').textContent=`${total}명`;
 }
@@ -467,6 +469,7 @@ $('#tab-contacts').addEventListener('click',e=>{const cp=e.target.closest('.copy
   else if(act==='cdel'){if(confirm('이 연락처를 삭제할까요?')){store.contacts[g].splice(i,1);editing=null;save();renderContacts();toast('삭제됨');}}
   else if(act==='cadd'){store.contacts[g].unshift({이름:'',부서:'',연락처:'',이메일:'',기타:''});editing={tab:'contacts',group:g,idx:0};save();renderContacts();}
   else if(act==='csave'){const tr=bt.closest('tr'),obj=store.contacts[g][i];$$('.cell-in',tr).forEach(inp=>obj[inp.dataset.k]=inp.value.trim());editing=null;save();renderContacts();toast('저장됨');}
+  else if(act==='ctoggle'){store.contactCollapsed=store.contactCollapsed||{};store.contactCollapsed[g]=!store.contactCollapsed[g];save();renderContacts();}
   else if(act==='caddcat'){const n=(prompt('추가할 카테고리 이름을 입력하세요')||'').trim();if(!n)return;if(store.contacts[n]){toast('이미 있는 카테고리예요');return;}store.contacts[n]=[];store.contactOrder.push(n);save();renderContacts();toast('카테고리 추가됨');}
   else if(act==='cdelcat'){const list=store.contacts[g]||[];const msg=list.length?`'${g}' 카테고리와 그 안의 연락처 ${list.length}명이 모두 삭제됩니다. 삭제할까요?`:`'${g}' 카테고리를 삭제할까요?`;if(confirm(msg)){delete store.contacts[g];store.contactOrder=store.contactOrder.filter(c=>c!==g);editing=null;save();renderContacts();toast('삭제됨');}}
 });
@@ -672,7 +675,7 @@ function setTopOffset(){const tb=document.querySelector('.topbar');if(tb)documen
 window.addEventListener('resize',setTopOffset);
 function showGate(msg){const g=$('#login-gate');if(g)g.style.display='flex';const m=$('#login-msg');if(m&&msg)m.textContent=msg;}
 function hideGate(){const g=$('#login-gate');if(g)g.style.display='none';}
-async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;if(!store.calMode)store.calMode='WEEK';['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv&&typeof mv==='object'){memos['today']=mv;if(memoRefresh['today'])memoRefresh['today']();}}catch(e){}try{const mt=await _db.ref('memoTax').once('value');const tv=mt.val();if(tv&&typeof tv==='object'){memos['tax']=tv;if(memoRefresh['tax'])memoRefresh['tax']();}}catch(e){}dbReady=true;initUndo();if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
+async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;if(!store.calMode)store.calMode='WEEK';if(!store.contactCollapsed)store.contactCollapsed={};['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv&&typeof mv==='object'){memos['today']=mv;if(memoRefresh['today'])memoRefresh['today']();}}catch(e){}try{const mt=await _db.ref('memoTax').once('value');const tv=mt.val();if(tv&&typeof tv==='object'){memos['tax']=tv;if(memoRefresh['tax'])memoRefresh['tax']();}}catch(e){}dbReady=true;initUndo();if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
 if($('#login-btn'))$('#login-btn').onclick=()=>{showGate('로그인 창을 확인하세요…');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{showGate('로그인 실패: '+((e&&e.message)||'')+' — 다시 시도해 주세요.');});};
 if($('#logout-btn'))$('#logout-btn').onclick=()=>{pwPin=null;pwBlob=null;dbReady=false;try{_auth.signOut();}catch(e){}showGate('로그아웃되었습니다. 다시 로그인하세요.');};
 _auth.onAuthStateChanged(async user=>{
