@@ -26,7 +26,7 @@
   .memo-wrap{margin-left:auto;position:relative}
   .memo-btn{background:#2c313d;color:#cfd4dd;border:1px solid #39404d;border-radius:9px;padding:7px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
   .memo-btn:hover{background:#343b48}
-  #memo-panel{position:absolute;right:0;top:calc(100% + 8px);width:340px;min-width:280px;max-height:85vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.28);padding:12px 12px 12px 14px;z-index:60}
+  .memo-panel{position:absolute;right:0;top:calc(100% + 8px);width:340px;min-width:280px;max-height:85vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.28);padding:12px 12px 12px 14px;z-index:60}
   .memo-resize{position:absolute;left:0;top:0;bottom:0;width:9px;cursor:ew-resize;border-radius:12px 0 0 12px}
   .memo-resize:hover{background:linear-gradient(90deg,var(--accent-soft),transparent)}
   .memo-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:14px;font-weight:700;color:var(--ink)}
@@ -38,11 +38,11 @@
   .memo-sw{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.2);cursor:pointer;display:inline-block}
   .memo-sw:hover{transform:scale(1.15)}
   .memo-close{border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px}
-  #memo-text{width:100%;min-height:180px;max-height:none;overflow:auto;resize:none;border:1px solid var(--line);border-radius:8px 8px 0 0;padding:10px;font-size:13.5px;font-family:inherit;line-height:1.7;color:var(--ink)}
+  .memo-text{width:100%;min-height:180px;max-height:none;overflow:auto;resize:none;border:1px solid var(--line);border-radius:8px 8px 0 0;padding:10px;font-size:13.5px;font-family:inherit;line-height:1.7;color:var(--ink)}
   .memo-rv{height:16px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;color:#b7bcc4;font-size:12px;user-select:none;border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;background:#f4f3ef}
   .memo-rv:hover{color:#7a8087;background:#eceae4}
-  #memo-text:focus{outline:1px solid var(--accent)}
-  #memo-text:empty:before{content:attr(data-ph);color:var(--muted)}
+  .memo-text:focus{outline:1px solid var(--accent)}
+  .memo-text:empty:before{content:attr(data-ph);color:var(--muted)}
   .memo-tools{display:inline-flex;gap:3px}
   .memo-fmt{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:12px;line-height:1;color:var(--ink);padding:0}
   .memo-fmt:hover{background:var(--accent-soft)}
@@ -226,8 +226,9 @@
 <div class="wrap">
   <div class="topbar">
   <header><h1>이지현 업무 대시보드</h1><span class="sub">칸 클릭=수정 · Enter 저장 · Esc 취소 · Tab 이동</span>
-    <div class="memo-wrap"><button id="memo-toggle" class="memo-btn">📋 할일</button>
-      <div id="memo-panel" class="hidden"><div class="memo-resize" id="memo-resize"></div><div class="memo-head"><span>할일</span><button class="memo-close" id="memo-close">✕</button></div><div class="memo-bar"><span class="memo-tools"><button class="memo-fmt" data-cmd="bold" title="굵게"><b>B</b></button><button class="memo-fmt" data-cmd="italic" title="기울임"><i>I</i></button><button class="memo-fmt" data-cmd="strikeThrough" title="취소선"><s>S</s></button></span><span class="memo-seg"><span class="memo-lab">글자</span><span class="memo-colors" id="memo-fg"></span></span><span class="memo-seg"><span class="memo-lab">배경</span><span class="memo-colors" id="memo-colors"></span></span></div><div id="memo-text" contenteditable="true" data-ph="여기에 자유롭게 메모하세요..."></div><div class="memo-rv" id="memo-rv" title="아래로 끌어 세로 크기 조절">⋯⋯⋯</div></div>
+    <div class="memo-wrap"><button id="memo-toggle" class="memo-btn">📋 오늘 업무</button><button id="memo-toggle2" class="memo-btn" style="margin-left:6px">🧾 세금계산서</button>
+      <div id="memo-panel" class="memo-panel hidden"><div class="memo-resize"></div><div class="memo-head"><span>오늘 업무</span><button class="memo-close">✕</button></div><div class="memo-bar"><span class="memo-tools"><button class="memo-fmt" data-cmd="bold" title="굵게"><b>B</b></button><button class="memo-fmt" data-cmd="italic" title="기울임"><i>I</i></button><button class="memo-fmt" data-cmd="strikeThrough" title="취소선"><s>S</s></button></span><span class="memo-seg"><span class="memo-lab">글자</span><span class="memo-colors fgc"></span></span><span class="memo-seg"><span class="memo-lab">배경</span><span class="memo-colors bgc"></span></span></div><div class="memo-text" contenteditable="true" data-ph="오늘 할 업무를 적어두세요..."></div><div class="memo-rv" title="아래로 끌어 세로 크기 조절">⋯⋯⋯</div></div>
+      <div id="memo-panel2" class="memo-panel hidden"><div class="memo-resize"></div><div class="memo-head"><span>세금계산서</span><button class="memo-close">✕</button></div><div class="memo-bar"><span class="memo-tools"><button class="memo-fmt" data-cmd="bold" title="굵게"><b>B</b></button><button class="memo-fmt" data-cmd="italic" title="기울임"><i>I</i></button><button class="memo-fmt" data-cmd="strikeThrough" title="취소선"><s>S</s></button></span><span class="memo-seg"><span class="memo-lab">글자</span><span class="memo-colors fgc"></span></span><span class="memo-seg"><span class="memo-lab">배경</span><span class="memo-colors bgc"></span></span></div><div class="memo-text" contenteditable="true" data-ph="최근 발행한 세금계산서 정보를 적어두세요..."></div><div class="memo-rv" title="아래로 끌어 세로 크기 조절">⋯⋯⋯</div></div>
     </div>
     <button id="logout-btn" class="memo-btn" style="margin-left:8px">로그아웃</button>
   </header>
@@ -563,30 +564,34 @@ $('#pw-file').addEventListener('change',async e=>{
 
 document.addEventListener('click',e=>{if(e.target.closest('.totop-btn'))window.scrollTo({top:0,behavior:'smooth'});});
 /* 메모판(할 일/메모) — 서식·색·너비 */
-const MEMOKEY='consabu_memo',MEMOW='consabu_memo_w',MEMOH='consabu_memo_h';
 const MBG=['#ffffff','#fff7d6','#e6f5ea','#e6eefb','#fdeaf3','#fdeaea'];
 const MFG=['#2c2c2c','#d23f3f','#2f7d43','#2563c9','#c9761a','#8a4fbf'];
 const escHtml=t=>(t||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-let memo={html:'',color:0};
-try{const raw=JSON.parse(localStorage.getItem(MEMOKEY));if(raw){if(Array.isArray(raw))memo={html:raw.map(x=>(x&&x.text)?escHtml(x.text):'').filter(Boolean).join('<br>'),color:0};else if(typeof raw==='object')memo={html:(raw.html!=null?raw.html:escHtml(raw.text||'').replace(/\n/g,'<br>')),color:raw.color||0};}}catch(e){}
-function memoSave(){try{localStorage.setItem(MEMOKEY,JSON.stringify(memo));}catch(e){}dbSet('memo',memo);}
-(function initMemo(){const t=$('#memo-toggle'),p=$('#memo-panel'),ta=$('#memo-text'),cw=$('#memo-colors'),fg=$('#memo-fg'),tools=$('.memo-tools',p),rz=$('#memo-resize');if(!t)return;
-  cw.innerHTML=MBG.map((c,i)=>`<span class="memo-sw" data-ci="${i}" style="background:${c}"></span>`).join('');
-  fg.innerHTML=MFG.map(c=>`<span class="memo-sw" data-fg="${c}" style="background:${c}"></span>`).join('');
-  let savedW=null;try{savedW=localStorage.getItem(MEMOW);}catch(e){}if(savedW)p.style.width=savedW+'px';
-  let savedH=null;try{savedH=localStorage.getItem(MEMOH);}catch(e){}if(savedH)ta.style.height=savedH+'px';
-  const rv=$('#memo-rv');if(rv)rv.addEventListener('mousedown',ev0=>{ev0.preventDefault();const sy=ev0.clientY,sh=ta.getBoundingClientRect().height;function mv(ev){let h=Math.max(120,sh+(ev.clientY-sy));ta.style.height=h+'px';}function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);try{localStorage.setItem(MEMOH,Math.round(parseFloat(ta.style.height)));}catch(e){}}document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);});
-  if(window.ResizeObserver){new ResizeObserver(()=>{if(ta.style.height){try{localStorage.setItem(MEMOH,Math.round(parseFloat(ta.style.height)));}catch(e){}}}).observe(ta);}
-  function apply(){ta.innerHTML=memo.html;ta.style.background=MBG[memo.color||0];}
-  t.onclick=()=>{p.classList.toggle('hidden');if(!p.classList.contains('hidden')){apply();ta.focus();}};
-  $('#memo-close').onclick=()=>p.classList.add('hidden');
-  ta.addEventListener('input',()=>{memo.html=ta.innerHTML;memoSave();});
-  tools.addEventListener('mousedown',e=>{const b=e.target.closest('[data-cmd]');if(!b)return;e.preventDefault();document.execCommand(b.dataset.cmd,false,null);memo.html=ta.innerHTML;memoSave();});
-  fg.addEventListener('mousedown',e=>{const s=e.target.closest('[data-fg]');if(!s)return;e.preventDefault();document.execCommand('foreColor',false,s.dataset.fg);memo.html=ta.innerHTML;memoSave();});
-  cw.addEventListener('click',e=>{const s=e.target.closest('[data-ci]');if(!s)return;memo.color=+s.dataset.ci;memoSave();ta.style.background=MBG[memo.color];});
-  rz.addEventListener('mousedown',e=>{e.preventDefault();const sx=e.clientX,sw=p.getBoundingClientRect().width;function mv(ev){let w=Math.min(window.innerWidth-40,Math.max(280,sw-(ev.clientX-sx)));p.style.width=w+'px';}function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);try{localStorage.setItem(MEMOW,Math.round(parseFloat(p.style.width)));}catch(e){}}document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);});
-  document.addEventListener('click',e=>{if(p.classList.contains('hidden'))return;if(!e.target.closest('.memo-wrap'))p.classList.add('hidden');});
-})();
+const memos={},memoRefresh={};
+function memoReadLocal(lsKey){let m={html:'',color:0};try{const raw=JSON.parse(localStorage.getItem(lsKey));if(raw){if(Array.isArray(raw))m={html:raw.map(x=>(x&&x.text)?escHtml(x.text):'').filter(Boolean).join('<br>'),color:0};else if(typeof raw==='object')m={html:(raw.html!=null?raw.html:escHtml(raw.text||'').replace(/\n/g,'<br>')),color:raw.color||0};}}catch(e){}return m;}
+function makeMemo(cfg){const key=cfg.key;memos[key]=memoReadLocal(cfg.lsKey);
+  const t=$('#'+cfg.toggle),p=$('#'+cfg.panel);if(!t||!p)return;
+  const ta=p.querySelector('.memo-text'),cw=p.querySelector('.bgc'),fg=p.querySelector('.fgc'),tools=p.querySelector('.memo-tools'),rz=p.querySelector('.memo-resize'),rv=p.querySelector('.memo-rv'),closeB=p.querySelector('.memo-close');
+  cw.innerHTML=MBG.map((c,i)=>'<span class="memo-sw" data-ci="'+i+'" style="background:'+c+'"></span>').join('');
+  fg.innerHTML=MFG.map(c=>'<span class="memo-sw" data-fg="'+c+'" style="background:'+c+'"></span>').join('');
+  try{const sw=localStorage.getItem(cfg.wKey);if(sw)p.style.width=sw+'px';}catch(e){}
+  try{const sh=localStorage.getItem(cfg.hKey);if(sh)ta.style.height=sh+'px';}catch(e){}
+  if(window.ResizeObserver){new ResizeObserver(()=>{if(ta.style.height){try{localStorage.setItem(cfg.hKey,Math.round(parseFloat(ta.style.height)));}catch(e){}}}).observe(ta);}
+  function apply(){ta.innerHTML=memos[key].html;ta.style.background=MBG[memos[key].color||0];}
+  memoRefresh[key]=()=>{if(!p.classList.contains('hidden'))apply();};
+  function doSave(){try{localStorage.setItem(cfg.lsKey,JSON.stringify(memos[key]));}catch(e){}dbSet(cfg.fbKey,memos[key]);}
+  t.onclick=()=>{const willOpen=p.classList.contains('hidden');document.querySelectorAll('.memo-panel').forEach(x=>{if(x!==p)x.classList.add('hidden');});p.classList.toggle('hidden');if(willOpen){apply();ta.focus();}};
+  closeB.onclick=()=>p.classList.add('hidden');
+  ta.addEventListener('input',()=>{memos[key].html=ta.innerHTML;doSave();});
+  tools.addEventListener('mousedown',e=>{const b=e.target.closest('[data-cmd]');if(!b)return;e.preventDefault();document.execCommand(b.dataset.cmd,false,null);memos[key].html=ta.innerHTML;doSave();});
+  fg.addEventListener('mousedown',e=>{const d=e.target.closest('[data-fg]');if(!d)return;e.preventDefault();document.execCommand('foreColor',false,d.dataset.fg);memos[key].html=ta.innerHTML;doSave();});
+  cw.addEventListener('click',e=>{const d=e.target.closest('[data-ci]');if(!d)return;memos[key].color=+d.dataset.ci;doSave();ta.style.background=MBG[memos[key].color];});
+  rv.addEventListener('mousedown',ev0=>{ev0.preventDefault();const sy=ev0.clientY,sh=ta.getBoundingClientRect().height;function mv(ev){let h=Math.max(120,sh+(ev.clientY-sy));ta.style.height=h+'px';}function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);try{localStorage.setItem(cfg.hKey,Math.round(parseFloat(ta.style.height)));}catch(e){}}document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);});
+  rz.addEventListener('mousedown',e=>{e.preventDefault();const sx=e.clientX,sw=p.getBoundingClientRect().width;function mv(ev){let w=Math.min(window.innerWidth-40,Math.max(280,sw-(ev.clientX-sx)));p.style.width=w+'px';}function up(){document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);try{localStorage.setItem(cfg.wKey,Math.round(parseFloat(p.style.width)));}catch(e){}}document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);});
+}
+makeMemo({key:'today',toggle:'memo-toggle',panel:'memo-panel',lsKey:'consabu_memo',wKey:'consabu_memo_w',hKey:'consabu_memo_h',fbKey:'memo'});
+makeMemo({key:'tax',toggle:'memo-toggle2',panel:'memo-panel2',lsKey:'consabu_memo_tax',wKey:'consabu_memo_tax_w',hKey:'consabu_memo_tax_h',fbKey:'memoTax'});
+document.addEventListener('click',e=>{if(!e.target.closest('.memo-wrap'))document.querySelectorAll('.memo-panel').forEach(x=>x.classList.add('hidden'));});
 
 /* ===== 프로젝트 보드 (배경색·할일색·메모서식) ===== */
 function puid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
@@ -667,7 +672,7 @@ function setTopOffset(){const tb=document.querySelector('.topbar');if(tb)documen
 window.addEventListener('resize',setTopOffset);
 function showGate(msg){const g=$('#login-gate');if(g)g.style.display='flex';const m=$('#login-msg');if(m&&msg)m.textContent=msg;}
 function hideGate(){const g=$('#login-gate');if(g)g.style.display='none';}
-async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;if(!store.calMode)store.calMode='WEEK';['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv)memo=mv;}catch(e){}dbReady=true;initUndo();if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
+async function dbLoadAll(){let seeded=false;const s=await _db.ref('store').once('value');const v=s.val();let vr=null;try{vr=(await _db.ref('_seedver').once('value')).val();}catch(e){}if(v&&v.prod&&vr===SEED_VER){store=v;}else{store=clone(SEED);seeded=true;}if(!store.contactOrder){const ks=Object.keys(store.contacts||{});store.contactOrder=BASE_CATS.filter(c=>ks.includes(c)).concat(ks.filter(c=>!BASE_CATS.includes(c)));}if(!store.cols)store.cols={prod:[],out:[]};if(!Array.isArray(store.projects))store.projects=[];if(!store.colLabels)store.colLabels={};if(store.projCols!==2)store.projCols=1;if(!store.calMode)store.calMode='WEEK';['prod','out'].forEach(t=>{if(Array.isArray(store[t]))store[t].forEach(r=>{delete r._new;});});try{const mm=await _db.ref('memo').once('value');const mv=mm.val();if(mv&&typeof mv==='object'){memos['today']=mv;if(memoRefresh['today'])memoRefresh['today']();}}catch(e){}try{const mt=await _db.ref('memoTax').once('value');const tv=mt.val();if(tv&&typeof tv==='object'){memos['tax']=tv;if(memoRefresh['tax'])memoRefresh['tax']();}}catch(e){}dbReady=true;initUndo();if(seeded){dbSet('store',store);_db.ref('_seedver').set(SEED_VER).catch(()=>{});}}
 if($('#login-btn'))$('#login-btn').onclick=()=>{showGate('로그인 창을 확인하세요…');_auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>{showGate('로그인 실패: '+((e&&e.message)||'')+' — 다시 시도해 주세요.');});};
 if($('#logout-btn'))$('#logout-btn').onclick=()=>{pwPin=null;pwBlob=null;dbReady=false;try{_auth.signOut();}catch(e){}showGate('로그아웃되었습니다. 다시 로그인하세요.');};
 _auth.onAuthStateChanged(async user=>{
